@@ -18,11 +18,12 @@ module.exports = (storage) =>
     }
 
     const now = Date.now();
-    let logstashUrl = config('LOGSTASH_URL');
+    let splunkUrl = config('SPLUNK_URL');
+    let guid = config('SPLUNK_GUID');
 
-    if (config('LOGSTASH_TOKEN')) {
-      const parsedUrl = url.parse(logstashUrl);
-      logstashUrl = (parsedUrl.query) ? `${logstashUrl}&token=${config('LOGSTASH_TOKEN')}` : `${logstashUrl}?token=${config('LOGSTASH_TOKEN')}`;
+    if (config('SPLUNK_TOKEN')) {
+      const parsedUrl = url.parse(splunkUrl);
+      splunkUrl = `${splunkUrl}/services/collector/raw?channel=${guid}`;
     }
 
     const sendLog = function (log, callback) {
@@ -30,7 +31,7 @@ module.exports = (storage) =>
         return callback();
       }
 
-      const index = config('LOGSTASH_INDEX');
+      const index = config('SPLUNK_INDEX');
       const data = {
         post_date: now,
         type_description: loggingTools.logTypes.get(log.type)
@@ -45,17 +46,18 @@ module.exports = (storage) =>
 
       const options = {
         method: 'POST',
+        verify: false,
         timeout: 2000,
-        url: logstashUrl,
-        headers: { 'cache-control': 'no-cache', 'content-type': 'application/json' },
+        url: splunkUrl,
+        headers: { 'User-Agent': 'CustomSplunkLogger/1.0', 'Authorization': 'Splunk ' + config('SPLUNK_TOKEN'), 'cache-control': 'no-cache', 'content-type': 'application/json' },
         body: data,
         json: true
       };
 
-      if (config('LOGSTASH_USER') && config('LOGSTASH_PASSWORD')) {
+      if (config('SPLUNK_USER') && config('SPLUNK_PASSWORD')) {
         options['auth'] = {
-          user: config('LOGSTASH_USER'),
-          pass: config('LOGSTASH_PASSWORD'),
+          user: config('SPLUNK_USER'),
+          pass: config('SPLUNK_PASSWORD'),
           sendImmediately: true
         }
       }
@@ -71,12 +73,12 @@ module.exports = (storage) =>
         return callback();
       }
 
-      logger.info(`Sending ${logs.length} logs to Logstash.`);
+      logger.info(`Sending ${logs.length} logs to Splunk.`);
 
       async.eachLimit(logs, 10, sendLog, callback);
     };
 
-    const slack = new loggingTools.reporters.SlackReporter({ hook: config('SLACK_INCOMING_WEBHOOK_URL'), username: 'auth0-logs-to-logstash', title: 'Logs To Logstash' });
+    const slack = new loggingTools.reporters.SlackReporter({ hook: config('SLACK_INCOMING_WEBHOOK_URL'), username: 'auth0-logs-to-splunk', title: 'Logs To Logstash' });
 
     const options = {
       domain: config('AUTH0_DOMAIN'),
