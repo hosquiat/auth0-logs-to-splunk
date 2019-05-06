@@ -11,7 +11,7 @@
   "repository": "https://github.com/sogeniusio/auth0-logs-to-splunk",
   "docsUrl": "https://auth0.com/docs/extensions/splunk",
   "logoUrl": "https://cdn.auth0.com/extensions/auth0-logs-to-splunk/assets/logo.png",
-  "codeUrl": "https://github.com/sogeniusio/auth0-logs-to-splunk.git",
+  "codeUrl": "https://github.com/sogeniusio/auth0-logs-to-splunk/blob/master/build/bundle.js",
   "keywords": [
     "auth0",
     "extension"
